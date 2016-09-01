@@ -1,0 +1,15 @@
+INSTANCE_NAME=<%= @name %>
+
+HTTP_PORT=<%= @http_port %>
+AJP_PORT='-1'
+JMX_PORT=<%= @jmx_port %>
+
+LISTEN_ADDR=0.0.0.0
+JENKINS_HOME="<%= @instance_base_dir %>/${INSTANCE_NAME}"
+
+JAVA_OPTS_WS="-XX:MaxPermSize=128m \
+              -Djavax.net.ssl.trustStore=/etc/pki/tls/certs/cacerts \
+              -Dcom.sun.management.jmxremote.port=${JMX_PORT} \
+              -Dcom.sun.management.jmxremote.ssl=false \
+              -Dcom.sun.management.jmxremote.authenticate=false"
+

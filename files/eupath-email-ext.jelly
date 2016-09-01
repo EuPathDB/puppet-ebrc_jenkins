@@ -1,0 +1,163 @@
+<j:jelly 
+    xmlns:j="jelly:core" 
+    xmlns:st="jelly:stapler" 
+    xmlns:d="jelly:define"
+    xmlns:u="jelly:util"
+>
+<!-- $Id$ -->
+<!-- $HeadURL$ -->
+<j:set var="tr" value="${it.getAction('hudson.plugins.testng.TestNGBuildAction')}"/>
+
+<j:whitespace>[This is an auto generated message from the Jenkins CI Engine]&#10;&#10;</j:whitespace>
+
+<!-- Print build status in human-friendly form ############################## -->
+<!-- ######################################################################## -->
+<!-- reimplementation of hudson.plugins.emailext.plugins.content.BuildStatusContent.getContent() -->
+
+<!-- TODO : fix result returned when failed followed by unstable (and there was never a successful build?) -->
+<j:set var="buildResultText">
+  <j:choose>
+    <j:when test="${build.result eq 'FAILURE'}">
+      <j:choose>
+        <j:when test="${!empty(build.previousBuild) &amp;&amp; 
+                         build.previousBuild.result eq 'FAILURE'}" >
+          <j:whitespace>Still Failing</j:whitespace>
+        </j:when>
+        <j:otherwise>
+          <j:whitespace>Failure</j:whitespace>
+        </j:otherwise>
+      </j:choose>
+    </j:when>
+    <j:when test="${build.result eq 'UNSTABLE'}" >
+      <j:choose>
+        <j:when test="${build.previousBuild.result eq 'UNSTABLE'}" >
+          <j:whitespace>Still Unstable</j:whitespace>
+        </j:when>
+        <j:when test="${build.previousBuild.result eq 'SUCCESS'}" >
+          <j:whitespace>Unstable</j:whitespace>
+        </j:when>
+        <j:when test="${build.previousBuild.result eq 'FAILURE' ||
+                        build.previousBuild.result eq 'ABORTED' ||
+                        build.previousBuild.result eq 'NOT_BUILT'}" >
+          <!-- iterate through previous builds -->
+          <j:set var="previous" value="${build.previousBuild.previousBuild}"/>
+          <j:while test="${!empty(previous)}">
+            <j:choose>
+              <j:when test="${previous.result eq 'SUCCESS'}">
+                <j:whitespace>Unstable</j:whitespace>
+                <j:break/>
+              </j:when>
+              <j:when test="${previous.result eq 'UNSTABLE'}">
+                <j:whitespace>Still Unstable</j:whitespace>
+                <j:break/>
+              </j:when>
+              <j:otherwise>
+                <j:set var="previous" value="${previous.previousBuild}"/>
+              </j:otherwise>
+            </j:choose>
+          </j:while>
+        </j:when>
+        <j:otherwise>Unstable</j:otherwise>
+      </j:choose>
+      <j:otherwise>Unstable</j:otherwise>
+    </j:when>
+    <j:when test="${build.result eq 'SUCCESS'}">
+      <j:choose>
+        <j:when test="${!empty(build.previousBuild) &amp;&amp;
+                        build.previousBuild.result eq 'UNSTABLE' ||
+                        build.previousBuild.result eq 'FAILURE'}">Fixed</j:when>
+        <j:otherwise>Successful</j:otherwise>
+      </j:choose>
+    </j:when>  
+    <j:otherwise>Unknown</j:otherwise>
+  </j:choose>
+</j:set>
+
+<j:whitespace>${project.name} - Build # ${build.number} - ${buildResultText}&#10;&#10;</j:whitespace>
+
+<j:whitespace>Check console output at ${rooturl}${build.url}console to view full the results.&#10;&#10;</j:whitespace>
+
+<!-- ### Failed Test Results (if any) ####################################### -->
+<!-- ######################################################################## -->
+<j:if test="${tr.results.failedTestCount > 0}">
+  <j:whitespace>--- FAILED TESTS -------------------&#10;&#10;</j:whitespace>
+    <j:forEach var="r" items="${tr.results.failedTests}">
+      <j:whitespace>${r.parent.name}.${r.name}&#10;</j:whitespace>
+      <u:replace var="uri" old=" " new="%20" value="${r.fullUrl}"/>
+      <j:whitespace>${rooturl}${build.url}${tr.urlName}/${uri}&#10;&#10;</j:whitespace>
+    </j:forEach>
+</j:if>
+
+
+<!-- #### Changes since last success ######################################## -->
+<!-- ######################################################################## -->
+<!-- Changes since last success -->
+<!-- reimplementation of ChangesSinceLastSuccessfulBuildContent.getFirstIncludedBuild() -->
+<j:set var="firstIncludedBuild" value="${build}"/>
+<j:set var="prevBld" value="${firstIncludedBuild.previousBuild}"/>
+<j:while test="${!empty(prevBld) &amp;&amp;
+                 prevBld.result ne 'SUCCESS'}">
+    <j:set var="firstIncludedBuild" value="${prevBld}"/>
+    <j:set var="prevBld" value="${firstIncludedBuild.previousBuild}"/>
+</j:while>
+
+<!-- custom reimplementation of AbstractChangesSinceContent, mimicking -->
+<!-- CHANGES_SINCE_LAST_SUCCESS, changesFormat="Revision %r by %a at %d\n%m%p\n" -->
+<j:if test="${!empty(build.previousBuild)}">
+
+  <j:whitespace>--- CHANGES SINCE LAST SUCCESSFUL BUILD --------------&#10;&#10;</j:whitespace>
+
+  <j:set var="startBuild" value="${firstIncludedBuild}"/>
+  <j:set var="endBuild" value="${build}"/>
+  <j:set var="currentBuild" value=""/>
+
+  <j:while test="${currentBuild != endBuild}">
+
+    <j:choose>
+      <j:when test="${empty(currentBuild)}">
+        <j:set var="currentBuild" value="${startBuild}"/>
+      </j:when>
+      <j:otherwise>
+        <j:set var="currentBuild" value="${currentBuild.nextBuild}"/>
+      </j:otherwise>
+    </j:choose>
+
+    <j:whitespace>Changes for Build #${currentBuild.number}&#10;</j:whitespace>
+    <j:set var="changeSet" value="${currentBuild.changeSet}" />
+    <j:if test="${changeSet!=null}">
+      <j:set var="hadChanges" value="false"/>
+      <j:forEach var="cs" items="${changeSet}" varStatus="loop">
+        <j:set var="hadChanges" value="true"/>
+        <j:set var="aUser" value="${cs.hudsonUser}"/>
+        <j:whitespace>Revision ${cs.commitId?:cs.revision?:cs.changeNumber} by ${aUser!=null?aUser.displayName:cs.author.displayName}: (${cs.msgAnnotated})&#10;</j:whitespace>
+        <j:forEach var="p" items="${cs.affectedFiles}">
+          <j:whitespace>    ${p.editType.name} ${p.path}&#10;</j:whitespace>
+        </j:forEach>
+      </j:forEach>
+      <j:if test="${!hadChanges}">
+        <j:whitespace>No changes&#10;</j:whitespace>
+      </j:if>
+    </j:if>
+    <j:whitespace>&#10;</j:whitespace>
+  </j:while>
+</j:if>
+
+
+<!-- ### Partial Build Log (not if there are failed tests) ################## -->
+<!-- ######################################################################## -->
+
+<j:if test="${empty(tr.results.failedTestCount) || tr.results.failedTestCount == 0}">
+  <j:whitespace>--- PARTIAL BUILD LOG -----------------&#10;&#10;</j:whitespace>
+  
+  <j:forEach var="line" items="${build.getLog(30)}">
+    <j:whitespace>${line}&#10;</j:whitespace>
+  </j:forEach>
+
+  <j:whitespace>&#10;</j:whitespace>
+</j:if>
+
+<!-- ######################################################################## -->
+<!-- ######################################################################## -->
+
+</j:jelly>
+
