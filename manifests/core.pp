@@ -41,15 +41,6 @@ class ebrc_jenkins::core {
     require => User['jenkins'],
   }
 
-  file { "${jenkins_user_home}/.ssh/known_hosts":
-    ensure  => file,
-    source  => 'puppet:///modules/ebrc_jenkins/ssh/known_hosts',
-    mode    => '0644',
-    owner   => $user,
-    group   => $group,
-    require => User['jenkins'],
-  }
-
   # jenkins uses this ssh key for sanity tests of the configuration. It
   # is not required (joeuser is the one that actually needs it)
   # but the configuration form will report git auth errors without it.
