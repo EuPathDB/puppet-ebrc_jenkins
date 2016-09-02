@@ -33,27 +33,6 @@ class ebrc_jenkins::core {
     require => File[$jenkins_user_home],
   }
 
-  file { "${jenkins_user_home}/.ssh":
-    ensure  => directory,
-    purge   => false,
-    mode    => '0700',
-    owner   => $user,
-    require => User['jenkins'],
-  }
-
-  # jenkins uses this ssh key for sanity tests of the configuration. It
-  # is not required (joeuser is the one that actually needs it)
-  # but the configuration form will report git auth errors without it.
-  # file { "${jenkins_user_home}/.ssh/tc-inst-fw-git-repo":
-  #   ensure  => file,
-  #   source  => 'puppet:///modules/joeuser/ssh/tc-inst-fw-git-repo',
-  #   owner   => $user,
-  #   group   => $group,
-  #   mode    => '0600',
-  #   require => User['jenkins'],
-  # }
-
-
   file { '/etc/security/limits.d/jenkins-limits.conf':
     source => 'puppet:///modules/ebrc_jenkins/jenkins-limits.conf',
   }
