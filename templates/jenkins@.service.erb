@@ -5,7 +5,7 @@ After=syslog.target
 [Service]
 ExecStart=/bin/sh -c "/bin/bash /usr/local/bin/jenkins_init.sh %i"
 Type=forking
-User=<%= @instance_owner %>
+User=<%= @user %>
 
 [Install]
 WantedBy=multi-user.target
