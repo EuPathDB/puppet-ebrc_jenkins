@@ -27,6 +27,7 @@ define ebrc_jenkins::instance (
           "${instance_dir}/war",
           "${instance_dir}/war/WEB-INF",
           "${instance_dir}/war/WEB-INF/lib",
+          "${instance_dir}/init.groovy.d",
           ]:
     ensure  => directory,
     owner   => $user,
