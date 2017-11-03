@@ -9,6 +9,7 @@ class ebrc_jenkins (
   String  $user_home   = $::ebrc_jenkins::params::user_home,
   Integer $uid         = $::ebrc_jenkins::params::uid,
   Integer $gid         = $::ebrc_jenkins::params::gid,
+  String  $truststore  = $::ebrc_jenkins::params::truststore,
 ) inherits ebrc_jenkins::params {
 
   include ::ebrc_jenkins::core
@@ -19,10 +20,11 @@ class ebrc_jenkins (
 
   $instances.each |$name, $instance| {
     ebrc_jenkins::instance { $name:
-      http_port => $instance['http_port'],
-      jmx_port  => $instance['jmx_port'],
-      version   => $instance['version'],
-      require   => Class['::ebrc_jenkins::core'],
+      http_port  => $instance['http_port'],
+      jmx_port   => $instance['jmx_port'],
+      version    => $instance['version'],
+      truststore => $truststore,
+      require    => Class['::ebrc_jenkins::core'],
     }
   }
 

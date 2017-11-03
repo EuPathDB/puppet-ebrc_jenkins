@@ -6,6 +6,7 @@ define ebrc_jenkins::instance (
     $user      = $ebrc_jenkins::user,
     $group     = $ebrc_jenkins::group,
     $version   = 'latest',
+    $truststore = '',
   ) {
 
   include ::ebrc_jenkins::core

@@ -7,6 +7,7 @@ class ebrc_jenkins::params {
   $user      = 'jenkins'
   $group     = 'jenkins'
   $user_home = '/usr/local/home/jenkins'
+  $truststore = ''
 
   $instances = {
     'DEFAULT' => {
